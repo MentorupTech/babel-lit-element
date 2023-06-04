@@ -1,7 +1,20 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, css } from "lit";
 
 import '../../../packages/header-component/header-component.js';
 import '../../../packages/card-component/card-component.js'
+import '../../../packages/footer-component/footer-component.js';
+
+const MENU_ITEMS = [
+  {
+    name: 'Dashboard',
+    icon: ''
+  },
+  {
+    name: 'About',
+    icon: '',
+  }
+];
+
 class DashboardPage extends LitElement {
 
   static get properties() {
@@ -11,65 +24,65 @@ class DashboardPage extends LitElement {
     }
   }
 
+  static get styles() {
+    return css`
+      :host {
+        display: block;
+        width: 100%;
+      }
+      
+      main {
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        column-gap: 2%;
+        row-gap: 2%;
+      }
+    `;
+  }
+
   constructor() {
     super();
     this.data = [];
     this.loading = false;
-    //this.loading = false;
-  }
-
-  set loading(param) {
-    debugger;
-    this._loading = param;
-  }
-
-  get loading() {
-    debugger;
-   return this._loading;
-  }
-
-  firstUpdated(_changedProperties) {
-    super.firstUpdated(_changedProperties);
-    debugger;
-  }
-
-  update(_changedProperties) {
-    super.update(_changedProperties);
-    if(_changedProperties.has('loading')) {
-      debugger;
-    }
-  }
-
-
-  updated(_changedProperties) {
-    super.update(_changedProperties)
-    if(_changedProperties.has('loading')) {
-      debugger;
-    }
   }
 
   async connectedCallback() {
     super.connectedCallback();
-    debugger;
-    //todo
-    await this._fetchData();
+    this.data = (await this._fetchListPokemon());
+
     this.addEventListener('on-delete', (event) => {
       const indexItemDelete = parseInt(event.detail);
       this.data = this.data.filter((data, index) => index !== indexItemDelete);
     });
   }
 
+  async _fetchDetailPokemon(url) {
+    const detailPokemon = await fetch(url);
+    return detailPokemon.json();
+  }
 
-  async _fetchData() {
+  async _fetchListPokemon() {
+    let result;
     try {
       this.loading = true;
-      const response = await fetch('https://api.covidtracking.com/v1/us/daily.json');
-      this.data = (await response.json());
+
+      const pokemon = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10');
+      const pokemonJson = await pokemon.json();
+
+      result = await Promise.all(pokemonJson.results.map( async result => {
+        return {
+          name: result.name,
+          data: await this._fetchDetailPokemon(result.url),
+        }
+      }));
     } catch (error) {
 
     } finally {
-      this._loading = false
+      this.loading = false
     }
+
+    return result;
   }
 
   handleOnSearch(event) {
@@ -77,23 +90,28 @@ class DashboardPage extends LitElement {
   }
 
   //todo id api for delete
-  _renderCardComponent() {
+  get _renderCardComponent() {
     return this.data.map((data, index) => {
+      debugger;
       return html `
-        <card-component data-order="${index}" date="${data.dateChecked}"></card-component>
+        <card-component 
+            name="${data.name}"
+            img="${data.data.sprites.front_default}">
+        </card-component>
       `
     })
   }
   render() {
     return html`
-      <header>
-        <header-component @on-search="${this.handleOnSearch}">
-          <h1>title</h1>
-        </header-component>
-      </header>
+      <header-component 
+          @on-search="${this.handleOnSearch}"
+          .menuItems="${MENU_ITEMS}"
+      >
+      </header-component>
       <main>
-        ${this.loading ? 'cargando....' : this._renderCardComponent()}
+        ${this.loading ? 'cargando....' : this._renderCardComponent}
       </main>
+      <footer-component></footer-component>
     `;
   }
 }

@@ -4,35 +4,53 @@ class CardComponent extends LitElement {
 
   static get properties() {
     return {
-      date: { type: String },
+      img: { type: String },
+      name: { type: String },
+      types: { type: Array },
     }
+  }
+
+  static get styles() {
+    return css`
+      :host {
+        display: block;
+        width: 100%;
+      }
+      
+      article {
+        border: 1px solid;
+        border-radius: 4px;
+        padding: 8px;
+      }
+      
+      img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 33%;
+      }
+    `;
   }
 
   constructor() {
     super();
-    this.date = '';
+    this.img = '';
+    this.name = '';
+    this.types = [];
   }
 
-  _handleClickDelete(event) {
-    debugger;
-    //todo
-    this.dispatchEvent(new CustomEvent('on-delete', {
-      bubbles: true,
-      composed: true,
-      detail: this.getAttribute('data-order'),
-    }));
-  }
+
   render() {
-    return html `
+    return html`
       <article>
         <header>
-
+          ${this.name}
         </header>
         <main>
-
+          <img src="${this.img}" alt="">
         </main>
         <footer>
-          <button @click="${this._handleClickDelete}"> Eliminar</button>
+         
         </footer>
       </article>
     `;
